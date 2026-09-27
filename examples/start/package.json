@@ -1,0 +1,34 @@
+{
+  "name": "mirafive-tanstack-start-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "vite preview"
+  },
+  "dependencies": {
+    "@mirafive/sdk-browser": "file:../.packs/mirafive-sdk-browser-0.5.0.tgz",
+    "@mirafive/sdk-react": "file:../.packs/mirafive-sdk-react-0.5.0.tgz",
+    "@mirafive/sdk-server": "file:../.packs/mirafive-sdk-server-0.5.0.tgz",
+    "@mirafive/sdk-tanstack": "file:../.packs/mirafive-sdk-tanstack-0.5.0.tgz",
+    "@tanstack/react-router": "^1.170.39",
+    "@tanstack/react-start": "^1.168.58",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.1"
+  },
+  "overrides": {
+    "@mirafive/sdk-browser": "file:../.packs/mirafive-sdk-browser-0.5.0.tgz",
+    "@mirafive/sdk-react": "file:../.packs/mirafive-sdk-react-0.5.0.tgz",
+    "@mirafive/sdk-server": "file:../.packs/mirafive-sdk-server-0.5.0.tgz",
+    "@mirafive/sdk-tanstack": "file:../.packs/mirafive-sdk-tanstack-0.5.0.tgz"
+  }
+}
