@@ -13,7 +13,7 @@ bun install --frozen-lockfile
 bun run check            # format, lint, typecheck, test, build, publint, attw, size-limit
 bun run test             # vitest: client (happy-dom) and middleware (node, fake fetch)
 bun run size             # size-limit against the limits in package.json (peers external)
-bun run example          # pack this repo and its siblings, install examples/start, vite build
+bun run example          # pack this repo, install examples/start, vite build
 ```
 
 ## Layout
@@ -23,17 +23,15 @@ bun run example          # pack this repo and its siblings, install examples/sta
   middleware's `.server()` callback: apps import this entry from `src/start.ts`, which
   Start bundles for the browser too. Keep every sdk-server import there type-only or
   dynamic, and keep `process.env` reads inside the callback.
-- `examples/start`: a living example, built by `bun run example` from packed tarballs
-  (`examples/.packs`, ignored). Not in the npm package (`files: ["dist"]`).
+- `examples/start`: a living example, built by `bun run example` from a packed tarball of this
+  repo (`examples/.packs`, ignored). Not in the npm package (`files: ["dist"]`).
 
-## Local dependencies
+## Dependencies
 
-`@mirafive/sdk-browser`, `@mirafive/sdk-server` and `@mirafive/sdk-react` are `file:../…`
-devDependencies plus `overrides` entries until they are published; the peer ranges stay
-`^1.0.0`. Build the siblings' `dist/` first if missing. Once 1.0.0 is on npm, switch the
-devDependencies to `^1.0.0` and drop `overrides`; the example then installs from npm too.
-A `file:` directory install mirrors the sibling's own `node_modules`, so tests dedupe
-React in `vitest.config.ts` and the example installs tarballs instead.
+`@mirafive/sdk-browser`, `@mirafive/sdk-server` and `@mirafive/sdk-react` are ordinary
+`^1.0.0` dependencies from npm; the example installs them from npm too and packs only this
+repo. To try an unreleased sibling change, build it and `bun link` it; never commit a
+`file:` path or `overrides`.
 
 ## Rules
 

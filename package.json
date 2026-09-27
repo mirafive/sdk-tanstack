@@ -51,9 +51,9 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
-    "@mirafive/sdk-browser": "file:../sdk-browser",
-    "@mirafive/sdk-react": "file:../sdk-react",
-    "@mirafive/sdk-server": "file:../sdk-server",
+    "@mirafive/sdk-browser": "^1.0.0",
+    "@mirafive/sdk-react": "^1.0.0",
+    "@mirafive/sdk-server": "^1.0.0",
     "@size-limit/preset-small-lib": "^14.0.1",
     "@tanstack/react-router": "^1.170.39",
     "@tanstack/react-start": "^1.168.58",
@@ -87,11 +87,6 @@
     "@tanstack/react-start": {
       "optional": true
     }
-  },
-  "overrides": {
-    "@mirafive/sdk-browser": "file:../sdk-browser",
-    "@mirafive/sdk-react": "file:../sdk-react",
-    "@mirafive/sdk-server": "file:../sdk-server"
   },
   "size-limit": [
     {
