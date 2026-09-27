@@ -45,6 +45,10 @@ React in `vitest.config.ts` and the example installs tarballs instead.
 - The secret key is read only inside the middleware callback in `src/start.ts`. Check
   after a change that `examples/start/dist/client` holds no `mirafive-server` code.
 - A response whose request read flags gets `Cache-Control: private, no-store` (FLAGS §5.3).
+- `createStart()` runs its factory per request: clients live in a module-scope map keyed by
+  key and host, never inside `miraMiddleware()`. A rejected start must not stay cached.
+- The provider renders the `mirafive-flags` block from `bootstrap`; docs never pair it
+  with `MiraFlagsScript`.
 - Bundle size: client entry ≤ 1.2 kB, `/start` ≤ 1 kB (min + gzip, peers external). No
   runtime dependencies.
 - `sideEffects: false` must stay true.

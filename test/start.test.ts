@@ -26,7 +26,7 @@ const pricing: Flag = {
   c: "s",
   w: 1
 }
-const hostile = "</script><!-- "
+const hostile = "</script><!--\u2028"
 const document: FlagDocument = {
   v: 1,
   at: Date.now(),
@@ -87,6 +87,7 @@ beforeEach(() => {
 
 afterEach(() => {
   fetchMock.mockClear()
+  vi.unstubAllEnvs()
   vi.unstubAllGlobals()
 })
 
@@ -152,6 +153,54 @@ describe("miraMiddleware()", () => {
     )
 
     expect(answer).toMatchObject({ variant: "a", errorCode: "NOT_ALLOWED" })
+  })
+})
+
+describe("one client per key and host", () => {
+  it("shares one client and one flag document across factory calls, as createStart() makes per request", async () => {
+    vi.stubEnv("MIRAFIVE_HOST", "https://eu.events.example")
+
+    const seen = new Set<unknown>()
+
+    for (let request = 0; request < 3; request += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- one request after another
+      await run(miraMiddleware(), async ({ mira, flagsFor }) => {
+        seen.add(mira)
+        await flagsFor({ userId: "user-42" })
+      })
+    }
+
+    expect(seen.size).toBe(1)
+    expect(fetchMock.mock.calls.filter(([url]) => url === "https://eu.events.example/v1/flags")).toHaveLength(
+      1
+    )
+  })
+
+  it("retries a start that failed instead of keeping the failure", async () => {
+    const key = "mf_ab12cd34_retryretryretryretry"
+
+    // new Mira() refuses to run where a browser's globals exist.
+    vi.stubGlobal("window", {})
+    vi.stubGlobal("document", {})
+    await expect(run(miraMiddleware({ key }), () => {})).rejects.toThrow("server-only")
+    vi.unstubAllGlobals()
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(run(miraMiddleware({ key }), () => {})).resolves.toBeDefined()
+  })
+
+  it("runs where process does not exist", async () => {
+    vi.stubGlobal("process", undefined)
+
+    try {
+      await expect(
+        run(miraMiddleware(), ({ mira }) => {
+          expect(mira).toBeDefined()
+        })
+      ).resolves.toBeDefined()
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })
 

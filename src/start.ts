@@ -21,32 +21,48 @@ export interface MiraContext {
   flagsFor: (unit?: FlagUnit) => Promise<UserFlags>
 }
 
+type Clients = readonly [Mira, MiraFlags]
+
+// createStart() calls its factory per request, so a client made per miraMiddleware() call would lose
+// the flag document and the exposure dedup each time. One pair per key and host, per process.
+const clients = new Map<string, Promise<Clients>>()
+
+const env = (name: string): string | undefined =>
+  typeof process === "undefined" ? undefined : process.env[name]
+
+const load = (key: string | undefined, host: string | undefined): Promise<Clients> => {
+  const id = `${key}\n${host}`
+  let loading = clients.get(id)
+
+  if (!loading) {
+    // Imported here: src/start.ts is bundled for the browser too, and the server SDK must not ride along.
+    loading = Promise.all([import("@mirafive/sdk-server"), import("@mirafive/sdk-server/flags")]).then(
+      ([server, flagsModule]) => {
+        const client = new server.Mira({ key, host })
+
+        return [client, new flagsModule.MiraFlags({ key, host, mira: client })] as const
+      }
+    )
+    clients.set(id, loading)
+    // A failed start is retried by the next request.
+    loading.catch(() => clients.delete(id))
+  }
+
+  return loading
+}
+
 /**
  * Request middleware: `context.mira` and `context.flagsFor`, flushed once the response is ready. A response
- * whose request read flags is sent with `Cache-Control: private, no-store`.
+ * whose request read flags is sent with `Cache-Control: private, no-store`. Clients are shared per key and
+ * host, so calling it per request (as `createStart()` does) costs nothing.
  */
 export const miraMiddleware = ({
   key,
   host,
   waitUntil
-}: MiraMiddlewareOptions = {}): RequestMiddlewareAfterServer<{}, undefined, MiraContext> => {
-  let clients: Promise<readonly [Mira, MiraFlags]> | undefined
-
-  return createMiddleware().server(async ({ request, next }) => {
-    // Imported here: src/start.ts is bundled for the browser too, and the server SDK must not ride along.
-    const [mira, flags] = await (clients ??= Promise.all([
-      import("@mirafive/sdk-server"),
-      import("@mirafive/sdk-server/flags")
-    ]).then(([server, flagsModule]) => {
-      const options = {
-        key: key ?? process.env.MIRAFIVE_SECRET_KEY,
-        host: host ?? process.env.MIRAFIVE_HOST,
-        waitUntil
-      }
-      const client = new server.Mira(options)
-
-      return [client, new flagsModule.MiraFlags({ ...options, waitUntil: undefined, mira: client })] as const
-    }))
+}: MiraMiddlewareOptions = {}): RequestMiddlewareAfterServer<{}, undefined, MiraContext> =>
+  createMiddleware().server(async ({ request, next }) => {
+    const [mira, flags] = await load(key ?? env("MIRAFIVE_SECRET_KEY"), host ?? env("MIRAFIVE_HOST"))
     const optedOut = request.headers.get("sec-gpc") === "1" || request.headers.get("dnt") === "1"
     let personal = false
 
@@ -77,7 +93,6 @@ export const miraMiddleware = ({
       waitUntil?.(flushed)
     }
   })
-}
 
 /** The `<script id="mirafive-flags">` block the browser SDK reads at start. */
 export const MiraFlagsScript = ({ flags }: { flags: UserFlags | string }): ReactElement => {

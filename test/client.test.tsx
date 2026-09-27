@@ -44,6 +44,7 @@ afterEach(() => {
   cleanup()
   document.body.innerHTML = ""
   fetchMock.mockClear()
+  vi.unstubAllEnvs()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
   Reflect.deleteProperty(window, "__mirafive_boot")
@@ -71,7 +72,9 @@ describe("<MiraProvider>", () => {
     expect(html).toContain("true<!-- --> <!-- -->3")
     expect(fetchMock).not.toHaveBeenCalled()
 
-    document.body.innerHTML = `${block}<div id="root">${html}</div>`
+    // The provider renders the block itself, ahead of the app, as it will be when the browser SDK starts.
+    expect(html.startsWith(block)).toBe(true)
+    document.body.innerHTML = `<div id="root">${html}</div>`
 
     const root = document.getElementById("root")!
     const recoverable = vi.fn()
@@ -81,7 +84,46 @@ describe("<MiraProvider>", () => {
     })
 
     expect(recoverable).not.toHaveBeenCalled()
-    expect(root.textContent).toBe("true 3")
+    expect(document.querySelectorAll("#mirafive-flags")).toHaveLength(1)
+    expect(root.querySelector("p")?.textContent).toBe("true 3")
+    // Answered from the block: nothing was fetched.
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("renders the bootstrap block once, where the browser SDK reads it", async () => {
+    const { MiraProvider } = await load()
+    const object = {
+      v: 1 as const,
+      at: Date.now(),
+      values: { note: ["on", "</script>\u2028"] as [string, string] }
+    }
+
+    vi.stubGlobal("window", undefined)
+    const fromString = renderToString(<MiraProvider websiteKey={KEY} bootstrap={block} />)
+    const fromObject = renderToString(<MiraProvider websiteKey={KEY} bootstrap={object} />)
+    vi.unstubAllGlobals()
+
+    expect(fromString).toBe(block)
+    expect(fromString.match(/mirafive-flags/g)).toHaveLength(1)
+    expect(fromObject).not.toContain("</script>\u2028")
+    expect(JSON.parse(fromObject.slice(fromObject.indexOf(">") + 1, fromObject.lastIndexOf("<")))).toEqual(
+      object
+    )
+    expect(renderToString(<MiraProvider websiteKey={KEY} />)).not.toContain("mirafive-flags")
+  })
+
+  it("warns when a later render passes other plugins", async () => {
+    const { MiraProvider } = await load()
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const view = render(<MiraProvider websiteKey={KEY} plugins={[flags()]} />)
+
+    view.rerender(<MiraProvider websiteKey={KEY} plugins={[flags()]} />)
+    expect(warn).not.toHaveBeenCalled()
+
+    view.rerender(<MiraProvider websiteKey={KEY} plugins={[flags(), identity()]} />)
+    view.rerender(<MiraProvider websiteKey={KEY} plugins={[flags(), identity()]} />)
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn.mock.calls[0]?.[0]).toContain("pageviews,flags,identity")
   })
 
   it("creates one client under StrictMode and sends pageviews", async () => {
@@ -149,7 +191,9 @@ describe("<MiraProvider>", () => {
     expect(() => render(<MiraProvider websiteKey={KEY} mode="full" plugins={[identity()]} />)).not.toThrow()
   })
 
-  it("sends nothing and warns once without a key", async () => {
+  it("sends nothing and warns once without a key, in production builds too", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+
     const { MiraProvider } = await load()
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     const view = render(<MiraProvider websiteKey={undefined} />)

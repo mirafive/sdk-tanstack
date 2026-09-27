@@ -1,6 +1,5 @@
 import { flags } from "@mirafive/sdk-browser/flags"
 import { MiraProvider } from "@mirafive/sdk-tanstack"
-import { MiraFlagsScript } from "@mirafive/sdk-tanstack/start"
 import { createRootRoute, HeadContent, Link, Outlet, Scripts } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 
@@ -21,8 +20,8 @@ function RootComponent() {
   const bootstrap = Route.useLoaderData()
 
   return (
+    // Renders the mirafive-flags block and hands the same answers to the flag hooks.
     <MiraProvider websiteKey={import.meta.env.VITE_MIRAFIVE_KEY} bootstrap={bootstrap} plugins={[flags()]}>
-      <MiraFlagsScript flags={bootstrap} />
       <nav>
         <Link to="/">Home</Link> <Link to="/checkout">Checkout</Link>
       </nav>

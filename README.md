@@ -9,9 +9,9 @@ hosted in the EU.
 
 | Import | min + gzip |
 |---|---|
-| `@mirafive/sdk-tanstack` (client) | 0.48 kB |
-| `@mirafive/sdk-tanstack` + `@mirafive/sdk-react` | 0.91 kB |
-| `@mirafive/sdk-tanstack/start` | 0.69 kB |
+| `@mirafive/sdk-tanstack` (client) | 0.77 kB |
+| `@mirafive/sdk-tanstack` + `@mirafive/sdk-react` | 1.29 kB |
+| `@mirafive/sdk-tanstack/start` | 0.75 kB |
 
 Measured with the peers external (`react`, `@tanstack/react-start`,
 `@mirafive/sdk-browser`, `@mirafive/sdk-server`, and `@mirafive/sdk-react` in the first
@@ -45,8 +45,11 @@ MIRAFIVE_SECRET_KEY=mf_…   # the source's secret key, server only (never VITE_
 import { miraMiddleware } from "@mirafive/sdk-tanstack/start"
 import { createStart } from "@tanstack/react-start"
 
+// Created once, outside the factory: createStart() runs its factory per request.
+const mirafive = miraMiddleware()
+
 export const startInstance = createStart(() => ({
-  requestMiddleware: [miraMiddleware()]
+  requestMiddleware: [mirafive]
 }))
 ```
 
@@ -71,7 +74,6 @@ export const trackSignup = createServerFn({ method: "POST" })
 // src/routes/__root.tsx
 import { flags } from "@mirafive/sdk-browser/flags"
 import { MiraProvider } from "@mirafive/sdk-tanstack"
-import { MiraFlagsScript } from "@mirafive/sdk-tanstack/start"
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
 
 import { getFlagBootstrap } from "../flags"
@@ -88,9 +90,9 @@ export const Route = createRootRoute({
   component: function Root() {
     const bootstrap = Route.useLoaderData()
 
+    // Renders the mirafive-flags block and hands the same answers to the flag hooks.
     return (
       <MiraProvider websiteKey={import.meta.env.VITE_MIRAFIVE_KEY} bootstrap={bootstrap} plugins={[flags()]}>
-        <MiraFlagsScript flags={bootstrap} />
         <Outlet />
       </MiraProvider>
     )
@@ -148,10 +150,11 @@ pageview then shows in the source's live view. Server side, a server function ru
 
 - `<MiraProvider websiteKey host? mode? plugins? flushAt? flushAfterMs? trackLocalhost? bootstrap?>`:
   creates the browser client once, on the first render in the browser, and keeps it for
-  the page's lifetime (later prop changes are ignored). Pass
-  `websiteKey={import.meta.env.VITE_MIRAFIVE_KEY}`. `pageviews()` is added unless
-  `plugins` already holds one. `bootstrap` is `flags.bootstrap()`. Without a key it sends
-  nothing and warns once.
+  the page's lifetime (later prop changes are ignored, and a changed plugin set is warned
+  about). Pass `websiteKey={import.meta.env.VITE_MIRAFIVE_KEY}`. `pageviews()` is added
+  unless `plugins` already holds one. `bootstrap` is `flags.bootstrap()` or a
+  `FlagBootstrap`: the provider renders it as the `mirafive-flags` block and hands it to
+  the hooks. Without a key it sends nothing and warns once, in every build.
 - `useMira()`, `useFlag(key, fallback)`, `useFlagConfig(key, fallback)`,
   `useTrackOnMount(name, properties?)`: re-exported from `@mirafive/sdk-react`.
 - `type MiraProviderProps`, `type FlagBootstrap`.
@@ -159,12 +162,15 @@ pageview then shows in the source's live view. Server side, a server function ru
 `@mirafive/sdk-tanstack/start`:
 
 - `miraMiddleware({ key?, host?, waitUntil? })`: TanStack Start request middleware. Puts
-  `mira` (one `Mira` per middleware, from `key` or `MIRAFIVE_SECRET_KEY`) and
-  `flagsFor(unit?)` on `context`; flushes when the response is ready, handing the
-  delivery to `waitUntil` when given; sets `Cache-Control: private, no-store` when flags
-  were read.
+  `mira` and `flagsFor(unit?)` on `context`. One `Mira` and one `MiraFlags` per process for
+  each key (`key` or `MIRAFIVE_SECRET_KEY`) and host (`host` or `MIRAFIVE_HOST`), however
+  often it is called; a failed start is retried by the next request. It flushes when the
+  response is ready, handing the delivery to `waitUntil` when given, and sets
+  `Cache-Control: private, no-store` when flags were read.
 - `<MiraFlagsScript flags={UserFlags | string} />`: the escaped
-  `<script type="application/json" id="mirafive-flags">` block.
+  `<script type="application/json" id="mirafive-flags">` block, for pages whose provider
+  gets no `bootstrap`. Never together with a provider `bootstrap`: that renders the block
+  already.
 - `type MiraContext` (`{ mira, flagsFor }`), `type MiraMiddlewareOptions`,
   `type FlagUnit`, `type UserFlags`.
 
@@ -174,8 +180,9 @@ pageview then shows in the source's live view. Server side, a server function ru
   than read from `import.meta.env` inside the package, because Vite only replaces
   `import.meta.env` in your own code.
 - **Hydration:** flag hooks render `bootstrap` on the server and during hydration, then
-  the browser SDK's answers. Pass the same string to `MiraFlagsScript` and the provider.
-  Without `flags()` in `plugins`, hooks fall back after hydration.
+  the browser SDK's answers, re-rendering only when an answer really changes. A bootstrap
+  older than 7 days is ignored, as the browser SDK ignores it. Without `flags()` in
+  `plugins`, hooks fall back after hydration.
 - **Where context is available:** server functions and server routes see `context.mira`
   and `context.flagsFor` from the global request middleware. Route loaders are
   isomorphic: read flags through a server function, as above.
@@ -184,7 +191,12 @@ pageview then shows in the source's live view. Server side, a server function ru
   `miraMiddleware({ waitUntil })` with `waitUntil` from `cloudflare:workers`; on Vercel,
   `waitUntil` from `@vercel/functions`.
   Events tracked while a streamed body is still rendering leave with the client's
-  one-second timer, which the given `waitUntil` also covers.
+  one-second timer, which `waitUntil` does not cover: track in server functions and
+  routes, not during streaming.
+- **Where the middleware lives:** create it once at module scope and put that value in
+  `requestMiddleware`. Calling `miraMiddleware()` inside the `createStart` factory also
+  works (the clients are shared), but builds a new middleware per request.
+- **No `process`:** on runtimes without `process.env`, pass `key` and `host`.
 - **Navigation:** `pageviews()` counts TanStack Router navigations through the Navigation
   API or the History API; there is no router subscription to add.
 - **CSP:** the bootstrap block is `type="application/json"`, which `script-src` does not
@@ -212,16 +224,18 @@ Add MIRA FIVE analytics (and feature flags) to this TanStack Start app with @mir
 2. Add to .env (and the deployment's env): VITE_MIRAFIVE_KEY=<website key, mf_…> and
    MIRAFIVE_SECRET_KEY=<secret key>. The secret key is server-only: never VITE_-prefixed, never
    read in a component; only "@mirafive/sdk-tanstack/start" uses it.
-3. In src/start.ts: createStart(() => ({ requestMiddleware: [miraMiddleware()] })) with miraMiddleware
-   from "@mirafive/sdk-tanstack/start" (create the file if missing; keep existing middleware).
+3. In src/start.ts: const mirafive = miraMiddleware() at module scope (miraMiddleware from
+   "@mirafive/sdk-tanstack/start"), then createStart(() => ({ requestMiddleware: [mirafive] }))
+   (create the file if missing; keep existing middleware).
    In src/routes/__root.tsx wrap the Outlet in
    <MiraProvider websiteKey={import.meta.env.VITE_MIRAFIVE_KEY}> from "@mirafive/sdk-tanstack".
    That alone counts pageviews on every navigation; do not add router subscriptions.
    Track in components with useMira().track(name, props) or useTrackOnMount(name, props); on the
    server inside createServerFn handlers with context.mira.track(name, { userId, properties }).
    For flags: a server function returning (await context.flagsFor({ userId })).bootstrap(), called from
-   the root route's loader (staleTime: Infinity); render <MiraFlagsScript flags={bootstrap} /> and pass
-   bootstrap={bootstrap} plugins={[flags()]} to MiraProvider (flags from "@mirafive/sdk-browser/flags").
+   the root route's loader (staleTime: Infinity); pass bootstrap={bootstrap} plugins={[flags()]} to
+   MiraProvider (flags from "@mirafive/sdk-browser/flags"). The provider renders the flags block itself:
+   do not add <MiraFlagsScript> as well.
    Read flags with useFlag(key, fallback) / useFlagConfig(key, fallback).
    On Cloudflare Workers or Vercel pass the platform's waitUntil: miraMiddleware({ waitUntil }).
 4. Keep the default consentless mode: it needs no banner. Only if a consent manager exists and ids
@@ -238,8 +252,10 @@ Facts for agents:
 - Imports (client): `import { MiraProvider, useMira, useFlag, useFlagConfig, useTrackOnMount } from "@mirafive/sdk-tanstack"`.
   Plugins: `import { flags } from "@mirafive/sdk-browser/flags"`, `/identity`,
   `/autocapture`, `/search`, `/experiments`. `pageviews()` is added for you.
-- Imports (Start server side): `import { miraMiddleware, MiraFlagsScript } from "@mirafive/sdk-tanstack/start"`;
-  `MiraFlagsScript` may be rendered in components, the middleware goes in `src/start.ts`.
+- Imports (Start server side): `import { miraMiddleware, MiraFlagsScript } from "@mirafive/sdk-tanstack/start"`.
+  The middleware is created once at module scope of `src/start.ts`
+  (`const mirafive = miraMiddleware()`), never inside the `createStart` factory.
+  `MiraFlagsScript` is only for pages whose provider gets no `bootstrap`.
 - Env vars: `VITE_MIRAFIVE_KEY` (public website key, passed as `websiteKey`),
   `MIRAFIVE_SECRET_KEY` (server only), `MIRAFIVE_HOST` (optional, server, default
   `https://events.mirafive.io`); the provider's `host` prop sets the browser host.
