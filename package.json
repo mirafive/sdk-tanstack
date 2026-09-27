@@ -1,7 +1,7 @@
 {
   "name": "@mirafive/sdk-tanstack",
   "version": "1.0.0",
-  "description": "MIRA FIVE for TanStack Start and TanStack Router: a client provider with flag hooks, and request middleware for server events and flags.",
+  "description": "MIRA FIVE SDK for TanStack Start",
   "keywords": [
     "ab-testing",
     "analytics",
