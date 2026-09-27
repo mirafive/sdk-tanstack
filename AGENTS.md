@@ -30,8 +30,8 @@ bun run example          # pack this repo and its siblings, install examples/sta
 
 `@mirafive/sdk-browser`, `@mirafive/sdk-server` and `@mirafive/sdk-react` are `file:../…`
 devDependencies plus `overrides` entries until they are published; the peer ranges stay
-`^0.5.0`. Build the siblings' `dist/` first if missing. Once 0.5.0 is on npm, switch the
-devDependencies to `^0.5.0` and drop `overrides`; the example then installs from npm too.
+`^1.0.0`. Build the siblings' `dist/` first if missing. Once 1.0.0 is on npm, switch the
+devDependencies to `^1.0.0` and drop `overrides`; the example then installs from npm too.
 A `file:` directory install mirrors the sibling's own `node_modules`, so tests dedupe
 React in `vitest.config.ts` and the example installs tarballs instead.
 

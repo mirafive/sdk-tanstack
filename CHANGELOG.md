@@ -1,9 +1,9 @@
 # Changelog
 
-## 0.5.0 — unreleased
+## 1.0.0 — unreleased
 
 First release on the v1 protocol, written from scratch over `@mirafive/sdk-react`,
-`@mirafive/sdk-browser` and `@mirafive/sdk-server` 0.5.
+`@mirafive/sdk-browser` and `@mirafive/sdk-server` 1.0.
 
 - Client entry (`"use client"`): `<MiraProvider websiteKey>` creates the browser client
   once, adds `pageviews()` unless `plugins` has one, renders the flag `bootstrap` as the

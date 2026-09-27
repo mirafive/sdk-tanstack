@@ -27,8 +27,8 @@ npm install @mirafive/sdk-tanstack @mirafive/sdk-react @mirafive/sdk-browser @mi
 # or: bun add / pnpm add / yarn add
 ```
 
-Peers: `react` ≥ 18.3, `@mirafive/sdk-react` and `@mirafive/sdk-browser` ^0.5.0; for
-`/start` also `@tanstack/react-start` ≥ 1.168 and `@mirafive/sdk-server` ^0.5.0. A
+Peers: `react` ≥ 18.3, `@mirafive/sdk-react` and `@mirafive/sdk-browser` ^1.0.0; for
+`/start` also `@tanstack/react-start` ≥ 1.168 and `@mirafive/sdk-server` ^1.0.0. A
 TanStack Router SPA without Start needs only the first three.
 
 ## Quickstart
