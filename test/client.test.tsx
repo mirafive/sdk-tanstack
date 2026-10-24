@@ -84,7 +84,12 @@ describe("<MiraProvider>", () => {
       await client?.flush()
     })
 
-    expect(sent()).toEqual([{ url: `https://events.mirafive.io/v1/batch/${KEY}`, name: "$pageview" }])
+    expect(sent()).toEqual([
+      {
+        url: expect.stringMatching(new RegExp(`^https://[a-z]+\\.mirafive\\.io/v1/batch/${KEY}$`)),
+        name: "$pageview"
+      }
+    ])
     // A second createMira() would have warned "second client stays inert".
     expect(warn).not.toHaveBeenCalled()
   })

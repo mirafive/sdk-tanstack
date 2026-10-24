@@ -4,7 +4,7 @@ import { createMiddleware, type RequestMiddlewareAfterServer } from "@tanstack/r
 export interface MiraMiddlewareOptions {
   /** Default `process.env.MIRAFIVE_SECRET_KEY`. */
   key?: string | undefined
-  /** Default `process.env.MIRAFIVE_HOST`, else `https://events.mirafive.io`. */
+  /** Default `process.env.MIRAFIVE_HOST`, else `https://collect.mirafive.io`. */
   host?: string | undefined
   /** The platform's `waitUntil` (`cloudflare:workers`, `@vercel/functions`), so deliveries outlive the response. */
   waitUntil?: ((promise: Promise<unknown>) => void) | undefined

@@ -102,8 +102,10 @@ the middleware. Pageviews are counted on every navigation.
 A working Start app lives in [`examples/start`](examples/start) (`bun run example` packs
 the SDKs, installs them as npm would, and runs `vite build`).
 
+For revenue, add `payment_id` (1–255 characters) to the properties next to `revenue` and `currency`: the payment provider's id of the payment. For Stripe pass the Checkout Session id on the success page or the PaymentIntent id from a webhook, for example `context.mira.track("order completed", { properties: { revenue: 49, currency: "EUR", payment_id: paymentIntent.id } })`. MIRA FIVE merges the event with the payment it imports from your connected Stripe account, so the sale counts once.
+
 Verify it: open a page on a deployed host (not `localhost`) and look for
-`POST https://events.mirafive.io/v1/batch/mf_…` answering `202` in the network tab; the
+`POST https://collect.mirafive.io/v1/batch/mf_…` answering `202` in the network tab; the
 pageview then shows in the source's live view. Server side, a server function running
 `await context.mira.send([{ name: "$install_check" }])` resolves to
 `{ accepted: 0, dropped: 1, reason: "install_check" }` when the secret key and host work.
@@ -165,7 +167,7 @@ pageview then shows in the source's live view. Server side, a server function ru
 - **No `process`:** on runtimes without `process.env`, pass `key` and `host`.
 - **Navigation:** `pageviews()` counts TanStack Router navigations through the Navigation
   API or the History API; there is no router subscription to add.
-- **CSP:** allow `connect-src https://events.mirafive.io`.
+- **CSP:** allow `connect-src https://collect.mirafive.io`.
 
 ## Troubleshooting
 
@@ -201,7 +203,7 @@ Add MIRA FIVE analytics to this TanStack Start app with @mirafive/sdk-tanstack.
    are wanted: plugins={[identity()]} from "@mirafive/sdk-browser/identity" plus mode="full", and
    useMira().consent({ statistics }) in its callback.
 5. Verify: run the production build (vite build); open a deployed page and check the network tab for
-   POST https://events.mirafive.io/v1/batch/<key> answering 202; server side, a server function running
+   POST https://collect.mirafive.io/v1/batch/<key> answering 202; server side, a server function running
    await context.mira.send([{ name: "$install_check" }]) answers reason "install_check". Report what changed.
 Do not add other analytics libraries, cookies or consent banners.
 ```
@@ -216,7 +218,7 @@ Facts for agents:
   (`const mirafive = miraMiddleware()`), never inside the `createStart` factory.
 - Env vars: `VITE_MIRAFIVE_KEY` (public website key, passed as `websiteKey`),
   `MIRAFIVE_SECRET_KEY` (server only), `MIRAFIVE_HOST` (optional, server, default
-  `https://events.mirafive.io`); the provider's `host` prop sets the browser host.
+  `https://collect.mirafive.io`); the provider's `host` prop sets the browser host.
 - Never ship `MIRAFIVE_SECRET_KEY` to a browser bundle; a secret key in a browser is
   refused and marked exposed. Never prefix it with `VITE_`.
 - The provider prop is `websiteKey`, not `key` (React reserves `key`), and it is required.
