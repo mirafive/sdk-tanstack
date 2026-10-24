@@ -1,33 +1,21 @@
 "use client"
 
-import { createMira, type FlagBootstrap, type Mira, type MiraOptions } from "@mirafive/sdk-browser"
+import { createMira, type Mira, type MiraOptions } from "@mirafive/sdk-browser"
 import { pageviews } from "@mirafive/sdk-browser/pageviews"
 import { MiraProvider as Provider } from "@mirafive/sdk-react"
-import { createElement, Fragment, type ReactElement, type ReactNode } from "react"
+import { createElement, type ReactElement, type ReactNode } from "react"
 
-export { useFlag, useFlagConfig, useMira, useTrackOnMount } from "@mirafive/sdk-react"
-export type { FlagBootstrap } from "@mirafive/sdk-browser"
+export { useMira, useTrackOnMount } from "@mirafive/sdk-react"
 
 export interface MiraProviderProps extends Omit<MiraOptions, "key"> {
   /** The source's website key: `import.meta.env.VITE_MIRAFIVE_KEY`. */
   websiteKey: string | undefined
-  /**
-   * `flags.bootstrap()` from `context.flagsFor()`. The provider renders it as the `mirafive-flags` block the
-   * browser SDK reads, and flag hooks render it on the server and in hydration.
-   */
-  bootstrap?: FlagBootstrap | string | undefined
   children?: ReactNode
 }
 
 let client: Mira | undefined
 let created: string | undefined
 const warned = new Set<string>()
-
-const escape = (json: string): string =>
-  json.replace(
-    /[<>&\u2028\u2029]/g,
-    (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`
-  )
 
 const warn = (message: string): void => {
   if (!warned.has(message)) {
@@ -38,12 +26,7 @@ const warn = (message: string): void => {
 }
 
 /** Creates the browser client on the first render in the browser and keeps it for the page's lifetime. */
-export const MiraProvider = ({
-  websiteKey,
-  bootstrap,
-  children,
-  ...options
-}: MiraProviderProps): ReactElement => {
+export const MiraProvider = ({ websiteKey, children, ...options }: MiraProviderProps): ReactElement => {
   if (typeof window !== "undefined") {
     const plugins = options.plugins ?? []
     const given = plugins.map((plugin) => plugin.name)
@@ -66,21 +49,5 @@ export const MiraProvider = ({
     }
   }
 
-  return createElement(
-    Fragment,
-    null,
-    bootstrap &&
-      createElement("script", {
-        type: "application/json",
-        id: "mirafive-flags",
-        dangerouslySetInnerHTML: {
-          __html: escape(
-            typeof bootstrap === "string"
-              ? bootstrap.replace(/^[^{]*|[^}]*$/g, "")
-              : JSON.stringify(bootstrap)
-          )
-        }
-      }),
-    createElement(Provider, { client, bootstrap }, children)
-  )
+  return createElement(Provider, { client }, children)
 }

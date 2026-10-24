@@ -2,9 +2,9 @@
 
 `@mirafive/sdk-tanstack`: MIRA FIVE for TanStack Start and TanStack Router, a
 `"use client"` provider over `@mirafive/sdk-react` and a `/start` entry (request
-middleware, bootstrap block) over `@mirafive/sdk-server`. Part of the MIRA FIVE SDK
-family; the wire contract, flag semantics and public API live in
-[mirafive/protocol](https://github.com/mirafive/protocol) (PROTOCOL.md, FLAGS.md, API.md).
+middleware) over `@mirafive/sdk-server`. Part of the MIRA FIVE SDK
+family; the wire contract and public API live in
+[mirafive/protocol](https://github.com/mirafive/protocol) (PROTOCOL.md, API.md).
 
 ## Commands
 
@@ -38,15 +38,12 @@ repo. To try an unreleased sibling change, build it and `bun link` it; never com
 - API.md is the contract for this package's public surface. Do not add, rename or
   remove exports without changing API.md first. The provider prop is `websiteKey` because
   React reserves `key`.
-- Thin by design: no transport, no evaluator, no router subscription. Pageviews come from
+- Thin by design: no transport, no router subscription. Pageviews come from
   sdk-browser's `pageviews()`, which the provider adds unless `plugins` holds one.
 - The secret key is read only inside the middleware callback in `src/start.ts`. Check
   after a change that `examples/start/dist/client` holds no `mirafive-server` code.
-- A response whose request read flags gets `Cache-Control: private, no-store` (FLAGS §5.3).
-- `createStart()` runs its factory per request: clients live in a module-scope map keyed by
+- `createStart()` runs its factory per request: the client lives in a module-scope map keyed by
   key and host, never inside `miraMiddleware()`. A rejected start must not stay cached.
-- The provider renders the `mirafive-flags` block from `bootstrap`; docs never pair it
-  with `MiraFlagsScript`.
 - Bundle size: client entry ≤ 1.2 kB, `/start` ≤ 1 kB (min + gzip, peers external). No
   runtime dependencies.
 - `sideEffects: false` must stay true.

@@ -1,7 +1,7 @@
 import { useMira } from "@mirafive/sdk-tanstack"
 import { createFileRoute } from "@tanstack/react-router"
 
-import { trackSignup } from "../flags"
+import { trackSignup } from "../signup"
 
 export const Route = createFileRoute("/")({ component: Home })
 

@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "description": "MIRA FIVE SDK for TanStack Start",
   "keywords": [
-    "ab-testing",
     "analytics",
     "cookieless",
-    "feature-flags",
     "gdpr",
     "mirafive",
     "privacy",

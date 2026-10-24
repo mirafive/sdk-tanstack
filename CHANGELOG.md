@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **Breaking:** feature flags and A/B experiments are removed. `<MiraProvider>` no longer
+  takes `bootstrap` and renders no `mirafive-flags` block, `useFlag` and `useFlagConfig`
+  are no longer re-exported, and the type `FlagBootstrap` is gone. In `/start`,
+  `context.flagsFor`, `<MiraFlagsScript>` and the types `FlagUnit` and `UserFlags` are
+  gone, and responses no longer get `Cache-Control: private, no-store`. `context.mira`
+  stays.
+- Consent: statistics is the only purpose. The `experiments` and `targeting` purposes are
+  gone. `useMira().consent({ experiments, targeting })` from an existing site still
+  works; sdk-browser accepts and ignores the keys.
+
 ## 1.0.0 — 2026-09-27
 
 First release on the v1 protocol, written from scratch over `@mirafive/sdk-react`,
