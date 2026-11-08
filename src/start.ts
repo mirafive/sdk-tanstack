@@ -1,59 +1,63 @@
-import type { Mira } from "@mirafive/sdk-server"
-import { createMiddleware, type RequestMiddlewareAfterServer } from "@tanstack/react-start"
+import type { Mira, MiraOptions } from "@mirafive/node";
+/**
+ * `@mirafive/tanstack/start`: request middleware for TanStack Start that puts a server client on
+ * `context.mira` and sends its events once the response is ready.
+ *
+ * ```ts
+ * // src/start.ts
+ * import { createStart } from "@tanstack/react-start";
+ * import { miraMiddleware } from "@mirafive/tanstack/start";
+ *
+ * export const startInstance = createStart(() => ({ requestMiddleware: [miraMiddleware()] }));
+ *
+ * // in a server function or route handler
+ * context.mira.revenue({ userId, amount: 4900, currency: "EUR", entryId: `order:${id}` });
+ * ```
+ */
+import { createMiddleware } from "@tanstack/react-start";
 
-export interface MiraMiddlewareOptions {
-  /** Default `process.env.MIRAFIVE_SECRET_KEY`. */
-  key?: string | undefined
-  /** Default `process.env.MIRAFIVE_HOST`, else `https://collect.mirafive.io`. */
-  host?: string | undefined
-  /** The platform's `waitUntil` (`cloudflare:workers`, `@vercel/functions`), so deliveries outlive the response. */
-  waitUntil?: ((promise: Promise<unknown>) => void) | undefined
+export type { Mira, MiraOptions } from "@mirafive/node";
+
+export interface MiraMiddlewareOptions extends MiraOptions {
+  /**
+   * The platform's `waitUntil` (Cloudflare `ctx.waitUntil`, `@vercel/functions`), so delivery
+   * outlives the response on serverless platforms.
+   */
+  waitUntil?: (promise: Promise<unknown>) => void;
 }
 
-/** What `miraMiddleware()` puts on `context`. */
+/** What `miraMiddleware()` adds to `context`. */
 export interface MiraContext {
-  mira: Mira
+  mira: Mira;
 }
 
-// createStart() calls its factory per request, so a client made per miraMiddleware() call would be
-// built again each time. One client per key and host, per process.
-const clients = new Map<string, Promise<Mira>>()
+// createStart() runs its factory per request, so one client per key and host for the process.
+const clients = new Map<string, Promise<Mira>>();
 
-const env = (name: string): string | undefined =>
-  typeof process === "undefined" ? undefined : process.env[name]
-
-const load = (key: string | undefined, host: string | undefined): Promise<Mira> => {
-  const id = `${key}\n${host}`
-  let loading = clients.get(id)
-
-  if (!loading) {
-    // Imported here: src/start.ts is bundled for the browser too, and the server SDK must not ride along.
-    loading = import("@mirafive/sdk-server").then((server) => new server.Mira({ key, host }))
-    clients.set(id, loading)
-    // A failed start is retried by the next request.
-    loading.catch(() => clients.delete(id))
+function shared(options: MiraOptions): Promise<Mira> {
+  const id = `${options.secretKey ?? ""}\n${options.host ?? ""}`;
+  let client = clients.get(id);
+  if (!client) {
+    // Imported on first use: this file is also bundled for the browser, the server SDK is not.
+    client = import("@mirafive/node").then((server) => new server.Mira(options));
+    clients.set(id, client);
+    client.catch(() => clients.delete(id));
   }
-
-  return loading
+  return client;
 }
 
 /**
- * Request middleware: `context.mira`, flushed once the response is ready. Clients are shared per key and
- * host, so calling it per request (as `createStart()` does) costs nothing.
+ * The middleware. The secret key defaults to `MIRAFIVE_SECRET_KEY` and the host to
+ * `MIRAFIVE_HOST`; calling it per request costs nothing.
  */
-export const miraMiddleware = ({
-  key,
-  host,
-  waitUntil
-}: MiraMiddlewareOptions = {}): RequestMiddlewareAfterServer<{}, undefined, MiraContext> =>
-  createMiddleware().server(async ({ next }) => {
-    const mira = await load(key ?? env("MIRAFIVE_SECRET_KEY"), host ?? env("MIRAFIVE_HOST"))
-
+export function miraMiddleware({ waitUntil, ...options }: MiraMiddlewareOptions = {}) {
+  return createMiddleware().server(async ({ next }) => {
+    const mira = await shared(options);
     try {
-      return await next<MiraContext>({ context: { mira } })
+      return await next({ context: { mira } satisfies MiraContext });
     } finally {
-      const flushed = mira.flush()
-
-      waitUntil?.(flushed)
+      const flushed = mira.flush();
+      waitUntil?.(flushed);
     }
-  })
+  });
+}

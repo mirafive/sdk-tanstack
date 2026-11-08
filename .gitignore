@@ -1,13 +1,5 @@
 node_modules/
 dist/
-coverage/
-*.tgz
+*.tsbuildinfo
 .DS_Store
-examples/.packs/
-examples/*/node_modules/
-examples/*/dist/
-examples/*/.output/
-examples/*/.tanstack/
-examples/*/bun.lock
-examples/*/src/routeTree.gen.ts
-examples/*/.env.local
+*.log

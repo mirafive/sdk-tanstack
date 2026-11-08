@@ -1,33 +1,27 @@
 # Changelog
 
-## Unreleased
+## 2.0.0 — 2026-11-08
 
-- Revenue events may carry `payment_id`, the payment provider's id of the payment (1–255 characters), next to `revenue` and `currency`. Nothing changes in the API: pass it in the properties. The README shows a Stripe example.
-- The default ingest host is `https://collect.mirafive.io`.
+A rewrite for the current MIRA FIVE platform: consent tiers, the revenue ledger, touchpoints and
+the `/v1/batch` wire format.
 
-- **Breaking:** feature flags and A/B experiments are removed. `<MiraProvider>` no longer
-  takes `bootstrap` and renders no `mirafive-flags` block, `useFlag` and `useFlagConfig`
-  are no longer re-exported, and the type `FlagBootstrap` is gone. In `/start`,
-  `context.flagsFor`, `<MiraFlagsScript>` and the types `FlagUnit` and `UserFlags` are
-  gone, and responses no longer get `Cache-Control: private, no-store`. `context.mira`
-  stays.
-- Consent: statistics is the only purpose. The `experiments` and `targeting` purposes are
-  gone. `useMira().consent({ experiments, targeting })` from an existing site still
-  works; sdk-browser accepts and ignores the keys.
+### Added
 
-## 1.0.0 — 2026-09-27
+- the provider and `miraMiddleware()` with `context.mira` and `waitUntil`.
 
-First release on the v1 protocol, written from scratch over `@mirafive/sdk-react`,
-`@mirafive/sdk-browser` and `@mirafive/sdk-server` 1.0.
+### Migrating from 1.x
 
-- Client entry (`"use client"`): `<MiraProvider websiteKey>` creates the browser client
-  once, adds `pageviews()` unless `plugins` has one, renders the flag `bootstrap` as the
-  `mirafive-flags` block and passes it to the hooks; warns about a missing key or a changed
-  plugin set; re-exports `useMira`, `useFlag`, `useFlagConfig` and `useTrackOnMount`.
-- `/start`: `miraMiddleware({ key?, host?, waitUntil? })` puts `mira` and `flagsFor` on
-  `context` (opt-out from `Sec-GPC`/`DNT`), shares one client pair per key and host across
-  calls (`createStart()` calls its factory per request), flushes once the response is
-  ready (through `waitUntil` when given) and marks flag-reading responses
-  `private, no-store`; `<MiraFlagsScript>`. The server SDK is loaded lazily and never
-  reaches the browser bundle.
-- `examples/start`, built with `vite build` against packed tarballs.
+- **Keys:** projects have a public key (`mira_pk_…`, browser and apps) and a secret key
+  (`mira_sk_…`, servers). `mf_…` website and secret keys are gone. Every SDK refuses the wrong
+  kind of key with a clear message.
+- **Host:** `https://events.mirafive.io` (was `collect.mirafive.io`).
+- **Environment:** `MIRAFIVE_SECRET_KEY` and `MIRAFIVE_HOST` on servers; the public key as
+  `NEXT_PUBLIC_MIRAFIVE_KEY`, `VITE_MIRAFIVE_KEY`, `PUBLIC_MIRAFIVE_KEY` (Astro),
+  `NUXT_PUBLIC_MIRAFIVE_KEY` or `MIRAFIVE_PUBLIC_KEY` (PHP templates).
+- **Consent:** there are no modes any more. The browser SDK follows the site's consent banner
+  (`consent: "auto"`) and collects what each tier allows: cookieless without consent, an
+  anonymous id with analytics consent, a user with `identify`. Server events carry the consent
+  they were collected under (default `not_applicable`).
+- **Revenue:** `revenue()` on the server SDKs, in integer minor units with an ISO currency,
+  `entryId` (replaces `payment_id`), `entryKind`, fees, tax, refunds and subscriptions. Revenue
+  properties on plain events are no longer read.
