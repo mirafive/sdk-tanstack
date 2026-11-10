@@ -16,7 +16,7 @@ import type { Mira, MiraOptions } from "@mirafive/node";
  */
 import { createMiddleware } from "@tanstack/react-start";
 
-export type { Mira, MiraOptions } from "@mirafive/node";
+export type { DeletePersonOptions, Mira, MiraOptions, PersonErasure } from "@mirafive/node";
 
 export interface MiraMiddlewareOptions extends MiraOptions {
   /**

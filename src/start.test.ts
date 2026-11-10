@@ -36,6 +36,14 @@ describe("miraMiddleware", () => {
     expect(waited).toHaveLength(2);
   });
 
+  test("the shared client on context offers deletePerson", async () => {
+    const { context } = await run(miraMiddleware({ enabled: false }));
+    const mira = context.mira as { deletePerson: (id: string) => Promise<unknown> };
+    expect(await mira.deletePerson("u1").catch((error: { code: string }) => error.code)).toBe(
+      "config",
+    );
+  });
+
   test("flushes even when the handler throws", async () => {
     const waited: Promise<unknown>[] = [];
     const middleware = miraMiddleware({ enabled: false, waitUntil: (p) => waited.push(p) });

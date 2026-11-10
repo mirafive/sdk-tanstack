@@ -64,6 +64,24 @@ export const checkout = createServerFn({ method: "POST" }).handler(async ({ cont
 `MIRAFIVE_SECRET_KEY`) plus `waitUntil` for serverless platforms (Cloudflare `ctx.waitUntil`,
 `@vercel/functions`), so delivery outlives the response.
 
+### Erasing a person (GDPR Art. 17)
+
+```ts
+// a server function
+export const erasePerson = createServerFn({ method: "POST" }).handler(async ({ context, data }) => {
+  const proof = await context.mira.deletePerson(data.customerId); // { request_id, deleted, … }
+  return { requestId: proof.request_id };
+});
+```
+
+Erases the person with the same effect as the dashboard's People page: events, devices, traits,
+ids in other systems and touchpoints. Revenue stays in the totals, without the person. Unlike the
+event methods it runs now, resolves with the proof (`request_id`, rows `deleted` per table) and
+throws a `MiraError`: `error.retryable` is true for a busy or unreachable ingest, false for a wrong
+key or a bad id. The erasure is idempotent: an unknown or already erased person resolves with zero
+rows, so a retry is always safe. Events that name the person afterwards are refused for 30 days:
+stop sending them. Details: [`deletePerson` in `@mirafive/node`](https://github.com/mirafive/sdk-node#erasing-a-person-gdpr-art-17).
+
 ## For AI coding assistants
 
 Rules for integrating MIRA FIVE correctly. They hold for every MIRA FIVE SDK.
