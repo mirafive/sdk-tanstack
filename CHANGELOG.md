@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.1 — 2026-11-10
+
+### Changed
+
+- Requires `@mirafive/node` 2.2.1 and `@mirafive/react` 2.0.1 (was `^2.0.0`): `fee` and `tax` on
+  `revenue()` are deprecated and no longer sent, and without analytics consent browser events no
+  longer carry the locale.
+- Built and checked with oxfmt 0.78 and oxlint 1.93. No change to the API.
+
 ## 2.0.0 — 2026-11-08
 
 A rewrite for the current MIRA FIVE platform: consent tiers, the revenue ledger, touchpoints and

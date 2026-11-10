@@ -1,6 +1,6 @@
 {
   "name": "@mirafive/tanstack",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "MIRA FIVE for TanStack Start and Router: a React provider and hooks for the browser, and request middleware that gives server functions a client on context.mira.",
   "keywords": [
     "analytics",
@@ -54,16 +54,16 @@
     "typecheck": "bun check"
   },
   "dependencies": {
-    "@mirafive/node": "^2.0.0",
-    "@mirafive/react": "^2.0.0"
+    "@mirafive/node": "^2.2.1",
+    "@mirafive/react": "^2.0.1"
   },
   "devDependencies": {
-    "@tanstack/react-start": "^1.169.4",
+    "@tanstack/react-start": "^1.169.5",
     "@types/bun": "^1.4.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "oxfmt": "^0.77.0",
-    "oxlint": "^1.92.0",
+    "oxfmt": "^0.78.0",
+    "oxlint": "^1.93.0",
     "oxlint-tsgolint": "^7.0.2006",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
