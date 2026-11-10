@@ -5,7 +5,7 @@
     "": {
       "name": "@mirafive/tanstack",
       "dependencies": {
-        "@mirafive/node": "^2.2.1",
+        "@mirafive/node": "^2.3.2",
         "@mirafive/react": "^2.0.1",
       },
       "devDependencies": {
@@ -72,9 +72,9 @@
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
-    "@mirafive/node": ["@mirafive/node@2.2.1", "", { "dependencies": { "@mirafive/protocol": "^2.2.1" } }, "sha512-HqRpv1G/ZgDbA00Fbub9ypqXVoGhnucqSezJ84Xtqr8+ntJ6ZpbCXqqCaEatZ/BMU1+ZePp4mZ7UrpAWnriCoQ=="],
+    "@mirafive/node": ["@mirafive/node@2.3.2", "", { "dependencies": { "@mirafive/protocol": "^2.3.0" } }, "sha512-t5kf5u9ZKNBTxf+kNbEY/regFkrI2LPmJW4lSgMKwsUfYUkrHXNUkY2rhKIZVkKOtmmnjX3LpSUu836HvOPH6Q=="],
 
-    "@mirafive/protocol": ["@mirafive/protocol@2.2.1", "", { "bin": { "mirafive-validate": "dist/cli.js" } }, "sha512-3ocDgDZQS3TPrSIRaRag/cCoRuDpxIGpFEcuMjQA7gPTd8NdTzsQmW9rBfqQv6efnJPn+1IMk4dswxhW7r8t8w=="],
+    "@mirafive/protocol": ["@mirafive/protocol@2.3.0", "", { "bin": { "mirafive-validate": "dist/cli.js" } }, "sha512-XCBV7CsJ8AVnExrK4sY+GwBYCOpoRp1ucazUzc35R83Vu+hEPe3m1YlgRAASxuHcTIaU3Lmbj7ZVc1oNH+QH4g=="],
 
     "@mirafive/react": ["@mirafive/react@2.0.1", "", { "dependencies": { "@mirafive/web": "^2.0.2" }, "peerDependencies": { "react": ">=18" } }, "sha512-sasUrjvyByG4EAfxYed5dd+6DfuVNM8TdIs+B4bx9YsG4YRLE8fxMmYK8QMtI5S88ov4Phf20gRMXifXFIs9Vw=="],
 
@@ -403,5 +403,7 @@
     "yallist": ["yallist@3.1.1", "", {}, "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g=="],
 
     "zod": ["zod@4.6.7", "", {}, "sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg=="],
+
+    "@mirafive/web/@mirafive/protocol": ["@mirafive/protocol@2.2.1", "", { "bin": { "mirafive-validate": "dist/cli.js" } }, "sha512-3ocDgDZQS3TPrSIRaRag/cCoRuDpxIGpFEcuMjQA7gPTd8NdTzsQmW9rBfqQv6efnJPn+1IMk4dswxhW7r8t8w=="],
   }
 }

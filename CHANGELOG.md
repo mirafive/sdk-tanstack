@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.0 — 2026-11-10
+
+### Added
+
+- `context.mira.deletePerson(userId)`: erases one person (GDPR Art. 17) with the secret key and resolves with the proof. It is
+  `@mirafive/node` 2.3.2's `deletePerson`, now documented here; `PersonErasure` and
+  `DeletePersonOptions` are exported.
+
+### Changed
+
+- Requires `@mirafive/node` 2.3.2 (and so `@mirafive/protocol` 2.3.0).
+
 ## 2.0.1 — 2026-11-10
 
 ### Changed
