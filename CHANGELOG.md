@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.1 — 2026-11-23
+
+### Changed
+
+- Requires `@mirafive/react` 2.0.3, and so `@mirafive/web` 2.1.1: every `$engagement` names
+  the page view it measures, so its time counts for that page view's visit, also when a tab is
+  shown again an hour later. No change to this package's API.
+
 ## 2.1.0 — 2026-11-10
 
 ### Added
